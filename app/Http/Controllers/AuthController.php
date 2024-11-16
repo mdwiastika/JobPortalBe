@@ -17,11 +17,11 @@ class AuthController extends Controller
                 'full_name' => 'required|max:55',
                 'email' => 'email|required|unique:users',
                 'password' => 'required|confirmed',
-                'role' => 'required',
+                'roles' => 'required',
             ]);
             $validatedData['password'] = bcrypt($request->password);
             $user = User::create($validatedData);
-            $user->assignRole($request->role);
+            $user->assignRole($request->roles);
             $token = $user->createToken('auth_token')->plainTextToken;
             $user['token'] = $token;
             return new UserResource('success', 'Successfully Register User!', $user);
