@@ -87,4 +87,8 @@ class JobCategoryController extends Controller
             return new JobCategoryResource('error', $th->getMessage(), null);
         }
     }
+    public function jobPost()
+    {
+        return $this->index();
+    }
 }

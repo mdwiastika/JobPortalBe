@@ -70,4 +70,8 @@ class SkillController extends Controller
             return new SkillResource('error', $th->getMessage(), null);
         }
     }
+    public function jobPost()
+    {
+        return $this->index();
+    }
 }

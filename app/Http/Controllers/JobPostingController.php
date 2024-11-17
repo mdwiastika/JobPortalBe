@@ -35,10 +35,10 @@ class JobPostingController extends Controller
     public function index()
     {
         try {
-            $jobPostings = JobPosting::query()->latest()->get();
-            return new JobPostingResource(200, 'Job postings retrieved successfully', $jobPostings);
+            $jobPostings = JobPosting::query()->with(['recruiter', 'skills', 'jobCategories'])->latest()->get();
+            return new JobPostingResource("success", 'Job postings retrieved successfully', $jobPostings);
         } catch (\Exception $e) {
-            return new JobPostingResource(500, 'An error occurred', $e->getMessage());
+            return new JobPostingResource("error", 'An error occurred', $e->getMessage());
         }
     }
     public function store(Request $request)
@@ -50,20 +50,26 @@ class JobPostingController extends Controller
                 'description' => 'required',
                 'requirements' => 'required',
                 'employment_type' => 'required|in:full_time,part_time,contract,internship',
-                'experience_level' => 'required|in:begineer,medium,expert',
+                'experience_level' => 'required|in:beginner,medium,expert',
                 'work_type' => 'required|in:on_site,remote,hybrid',
                 'min_salary' => 'required|numeric|min:0|lt:max_salary',
                 'max_salary' => 'required|numeric|min:0|gte:min_salary',
                 'location' => 'required',
+                'is_disability' => 'boolean',
             ], $this->validationMessage);
             $jobPosting = JobPosting::create($validatedData);
-            return new JobPostingResource(201, 'Job posting created successfully', $jobPosting);
-        } catch (\Exception $e) {
-            return new JobPostingResource(500, 'An error occurred', $e->getMessage());
+            $skills = collect(json_decode($request->skills))->pluck('id')->toArray();
+            $jobCategories = collect(json_decode($request->job_categories))->pluck('id')->toArray();
+            $jobPosting->skills()->sync($skills);
+            $jobPosting->jobCategories()->sync($jobCategories);
+            $jobPosting->load(['recruiter', 'skills', 'jobCategories']);
+            return new JobPostingResource("success", 'Job posting created successfully', $jobPosting);
         } catch (ValidationException $ve) {
             $errors = $ve->errors();
             $firstErrorMessages = array_values($errors)[0];
-            return new JobPostingResource(400, $firstErrorMessages, null);
+            return new JobPostingResource("error", $firstErrorMessages, null);
+        } catch (\Exception $e) {
+            return new JobPostingResource("error", 'An error occurred', $e->getMessage());
         }
     }
     public function update(Request $request, string $id)
@@ -76,22 +82,28 @@ class JobPostingController extends Controller
                 'description' => 'required',
                 'requirements' => 'required',
                 'employment_type' => 'required|in:full_time,part_time,contract,internship',
-                'experience_level' => 'required|in:begineer,medium,expert',
+                'experience_level' => 'required|in:beginner,medium,expert',
                 'work_type' => 'required|in:on_site,remote,hybrid',
                 'min_salary' => 'required|numeric|min:0|lt:max_salary',
                 'max_salary' => 'required|numeric|min:0|gte:min_salary',
                 'location' => 'required',
+                'is_disability' => 'boolean',
             ], $this->validationMessage);
             $jobPosting->update($validatedData);
-            return new JobPostingResource(200, 'Job posting updated successfully', $jobPosting);
+            $skills = collect(json_decode($request->skills))->pluck('id')->toArray();
+            $jobCategories = collect(json_decode($request->job_categories))->pluck('id')->toArray();
+            $jobPosting->skills()->sync($skills);
+            $jobPosting->jobCategories()->sync($jobCategories);
+            $jobPosting = JobPosting::with(['recruiter', 'skills', 'jobCategories'])->findOrFail($id);
+            return new JobPostingResource("success", 'Job posting updated successfully', $jobPosting);
         } catch (ValidationException $ve) {
             $errors = $ve->errors();
             $firstErrorMessages = array_values($errors)[0];
-            return new JobPostingResource(400, $firstErrorMessages, null);
+            return new JobPostingResource("error", $firstErrorMessages, null);
         } catch (ModelNotFoundException $e) {
-            return new JobPostingResource(404, 'Job posting not found', $e->getMessage());
+            return new JobPostingResource("error", 'Job posting not found', $e->getMessage());
         } catch (\Exception $e) {
-            return new JobPostingResource(500, 'An error occurred', $e->getMessage());
+            return new JobPostingResource("error", 'An error occurred', $e->getMessage());
         }
     }
     public function destroy(string $id)
@@ -99,11 +111,11 @@ class JobPostingController extends Controller
         try {
             $jobPosting = JobPosting::findOrFail($id);
             $jobPosting->delete();
-            return new JobPostingResource(200, 'Job posting deleted successfully', null);
+            return new JobPostingResource("success", 'Job posting deleted successfully', null);
         } catch (ModelNotFoundException $e) {
-            return new JobPostingResource(404, 'Job posting not found', $e->getMessage());
+            return new JobPostingResource("error", 'Job posting not found', $e->getMessage());
         } catch (\Exception $e) {
-            return new JobPostingResource(500, 'An error occurred', $e->getMessage());
+            return new JobPostingResource("error", 'An error occurred', $e->getMessage());
         }
     }
 }

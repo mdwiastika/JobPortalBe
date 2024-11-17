@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('job_postings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('recruiter_id')->constrained('recruiters', 'id')->cascadeOnDelete();
+            $table->foreignId('recruiter_id')->constrained('users', 'id')->cascadeOnDelete();
             $table->string('title');
             $table->string('slug')->nullable();
             $table->text('description');

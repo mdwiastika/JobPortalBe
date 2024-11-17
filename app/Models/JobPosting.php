@@ -20,6 +20,7 @@ class JobPosting extends Model
         'min_salary',
         'max_salary',
         'location',
+        'is_disability',
     ];
     public function sluggable(): array
     {
@@ -36,5 +37,9 @@ class JobPosting extends Model
     public function skills()
     {
         return $this->belongsToMany(Skill::class, 'job_posting_skills', 'job_posting_id', 'skill_id');
+    }
+    public function jobCategories()
+    {
+        return $this->belongsToMany(JobCategory::class, 'job_posting_categories', 'job_posting_id', 'job_category_id');
     }
 }
