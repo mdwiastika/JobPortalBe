@@ -24,12 +24,12 @@ class JobCategoryController extends Controller
         try {
             $validatedData = $request->validate([
                 'category_name' => 'required',
-                'icon' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:9048',
+                'icon' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:9048',
             ], [
                 'category_name.required' => 'The category name field is required.',
                 'icon.required' => 'The icon field is required.',
                 'icon.image' => 'The icon must be an image.',
-                'icon.mimes' => 'The icon must be a file of type: jpeg, png, jpg, gif, svg.',
+                'icon.mimes' => 'The icon must be a file of type: jpeg, png, jpg, gif, svg, webp.',
                 'icon.max' => 'The icon may not be greater than 9048 kilobytes.',
             ]);
             if ($request->hasFile('icon')) {
@@ -56,11 +56,11 @@ class JobCategoryController extends Controller
             ]);
             if ($request->hasFile('icon')) {
                 $validatedData = $request->validate([
-                    'icon' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:9048',
+                    'icon' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:9048',
                 ], [
                     'icon.required' => 'The icon field is required.',
                     'icon.image' => 'The icon must be an image.',
-                    'icon.mimes' => 'The icon must be a file of type: jpeg, png, jpg, gif, svg.',
+                    'icon.mimes' => 'The icon must be a file of type: jpeg, png, jpg, gif, svg, webp.',
                     'icon.max' => 'The icon may not be greater than 9048 kilobytes.',
                 ]);
                 Storage::delete($jobCategory->icon);

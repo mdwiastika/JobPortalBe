@@ -57,4 +57,15 @@ class UserController extends Controller
             return new UserResource('error', $th->getMessage(), null);
         }
     }
+    public function recruiter()
+    {
+        try {
+            $users = User::whereHas('roles', function ($query) {
+                $query->where('name', 'recruiter');
+            })->with(['roles'])->get();
+            return new UserResource('success', 'Data fetched successfully', $users);
+        } catch (\Throwable $th) {
+            return new UserResource('error', $th->getMessage(), null);
+        }
+    }
 }
