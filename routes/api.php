@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\SkillController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,5 +20,6 @@ Route::prefix('v1')->group(function () {
         });
         Route::apiResource('users', UserController::class)->middleware('role:super_admin|admin');
         Route::apiResource('companies', CompanyController::class)->middleware('role:super_admin|admin|recruiter');
+        Route::apiResource('skills', SkillController::class)->middleware('role:super_admin|admin');
     });
 });

@@ -36,7 +36,9 @@ class UserController extends Controller
             $user->syncRoles($validatedData['roles']);
             return new UserResource('success', 'Data updated successfully', $user);
         } catch (ValidationException $ve) {
-            return new UserResource('error', $ve->errors(), null);
+            $errors = $ve->errors();
+            $firstErrorMessages = array_values($errors)[0];
+            return new UserResource('error', $firstErrorMessages, null);
         } catch (\Throwable $th) {
             return new UserResource('error', $th->getMessage(), null);
         } catch (ModelNotFoundException $th) {
@@ -49,9 +51,9 @@ class UserController extends Controller
             $user = User::findOrFail($id);
             $user->delete();
             return new UserResource('success', 'Data deleted successfully', null);
-        } catch (\Throwable $th) {
-            return new UserResource('error', $th->getMessage(), null);
         } catch (ModelNotFoundException $th) {
+            return new UserResource('error', $th->getMessage(), null);
+        } catch (\Throwable $th) {
             return new UserResource('error', $th->getMessage(), null);
         }
     }

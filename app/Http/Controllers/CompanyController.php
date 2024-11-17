@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class CompanyController extends Controller
 {
@@ -17,9 +18,9 @@ class CompanyController extends Controller
             $user = Auth::user();
             $role = $user->roles->first()->name;
             if ($role == 'super_admin' || $role == 'admin') {
-                $companies = Company::all();
+                $companies = Company::latest()->get();
             } else {
-                $companies = Company::where('user_id', $user->id)->get();
+                $companies = Company::where('user_id', $user->id)->latest()->get();
             }
             return new CompanyResource('success', 'Data fetched successfully', $companies);
         } catch (\Throwable $th) {
@@ -42,11 +43,21 @@ class CompanyController extends Controller
                 'logo' => 'required',
                 'industry' => 'required',
                 'description' => 'required',
+            ], [
+                'name.required' => 'The name field is required.',
+                'location.required' => 'The location field is required.',
+                'logo.required' => 'The logo field is required.',
+                'industry.required' => 'The industry field is required.',
+                'description.required' => 'The description field is required.',
             ]);
             $path = $request->file('logo')->store('companies');
             $validatedData['logo'] = $path;
             $company = Company::create($validatedData);
             return new CompanyResource('success', 'Data stored successfully', $company);
+        } catch (ValidationException $ve) {
+            $errors = $ve->errors();
+            $firstErrorMessages = array_values($errors)[0];
+            return new CompanyResource('error', $firstErrorMessages, null);
         } catch (\Throwable $th) {
             return new CompanyResource('error', $th->getMessage(), null);
         }
@@ -60,6 +71,11 @@ class CompanyController extends Controller
                 'location' => 'required',
                 'industry' => 'required',
                 'description' => 'required',
+            ], [
+                'name.required' => 'The name field is required.',
+                'location.required' => 'The location field is required.',
+                'industry.required' => 'The industry field is required.',
+                'description.required' => 'The description field is required.',
             ]);
             if ($request->hasFile('logo')) {
                 Storage::delete($company->logo);
@@ -68,9 +84,13 @@ class CompanyController extends Controller
             }
             $company->update($validatedData);
             return new CompanyResource('success', 'Data updated successfully', $company);
-        } catch (\Throwable $th) {
-            return new CompanyResource('error', $th->getMessage(), null);
         } catch (ModelNotFoundException $th) {
+            return new CompanyResource('error', $th->getMessage(), null);
+        } catch (ValidationException $ve) {
+            $errors = $ve->errors();
+            $firstErrorMessages = array_values($errors)[0];
+            return new CompanyResource('error', $firstErrorMessages, null);
+        } catch (\Throwable $th) {
             return new CompanyResource('error', $th->getMessage(), null);
         }
     }
