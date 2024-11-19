@@ -32,10 +32,14 @@ class JobPostingController extends Controller
         'max_salary.gte' => 'The maximum salary must be greater than or equal to the minimum salary.',
         'location.required' => 'The location field is required.',
     ];
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $jobPostings = JobPosting::query()->with(['recruiter', 'skills', 'jobCategories'])->latest()->get();
+            if ($request->user()->hasRole('recruiter')) {
+                $jobPostings = JobPosting::query()->where('recruiter_id', $request->user()->id)->with(['recruiter', 'skills', 'jobCategories'])->latest()->get();
+            } else {
+                $jobPostings = JobPosting::query()->with(['recruiter', 'skills', 'jobCategories'])->latest()->get();
+            }
             return new JobPostingResource("success", 'Job postings retrieved successfully', $jobPostings);
         } catch (\Exception $e) {
             return new JobPostingResource("error", 'An error occurred', $e->getMessage());
@@ -45,7 +49,6 @@ class JobPostingController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'recruiter_id' => 'required|exists:users,id',
                 'title' => 'required',
                 'description' => 'required',
                 'requirements' => 'required',
@@ -57,6 +60,11 @@ class JobPostingController extends Controller
                 'location' => 'required',
                 'is_disability' => 'boolean',
             ], $this->validationMessage);
+            if ($request->recruiter_id && ($request->user()->hasRole('admin') || $request->user()->hasRole('super_admin'))) {
+                $validatedData['recruiter_id'] = $request->recruiter_id;
+            } else {
+                $validatedData['recruiter_id'] = $request->user()->id;
+            }
             $jobPosting = JobPosting::create($validatedData);
             $skills = collect(json_decode($request->skills))->pluck('id')->toArray();
             $jobCategories = collect(json_decode($request->job_categories))->pluck('id')->toArray();
@@ -77,7 +85,6 @@ class JobPostingController extends Controller
         try {
             $jobPosting = JobPosting::findOrFail($id);
             $validatedData = $request->validate([
-                'recruiter_id' => 'required|exists:users,id',
                 'title' => 'required',
                 'description' => 'required',
                 'requirements' => 'required',
@@ -89,6 +96,11 @@ class JobPostingController extends Controller
                 'location' => 'required',
                 'is_disability' => 'boolean',
             ], $this->validationMessage);
+            if ($request->recruiter_id) {
+                $validatedData['recruiter_id'] = $request->recruiter_id;
+            } else {
+                $validatedData['recruiter_id'] = $request->user()->id;
+            }
             $jobPosting->update($validatedData);
             $skills = collect(json_decode($request->skills))->pluck('id')->toArray();
             $jobCategories = collect(json_decode($request->job_categories))->pluck('id')->toArray();

@@ -17,11 +17,11 @@ class JobApplication extends Model
 
     public function jobSeeker()
     {
-        return $this->belongsTo(JobSeeker::class);
+        return $this->belongsTo(JobSeeker::class, 'job_seeker_id', 'user_id');
     }
 
     public function jobPosting()
     {
-        return $this->belongsTo(JobPosting::class);
+        return $this->belongsTo(JobPosting::class, 'job_posting_id', 'id');
     }
 }

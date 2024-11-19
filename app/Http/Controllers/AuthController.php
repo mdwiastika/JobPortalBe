@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use App\Models\Recruiter;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,48 @@ class AuthController extends Controller
         try {
             $request->user()->currentAccessToken()->delete();
             return new UserResource('success', 'Successfully Logout User!', null);
+        } catch (\Throwable $th) {
+            return new UserResource('error', $th->getMessage(), null);
+        }
+    }
+    public function myProfile(Request $request)
+    {
+        try {
+            $recruiter = Recruiter::where('user_id', $request->user()->id)->first();
+            if ($recruiter) {
+                $recruiter->load('company');
+                return new UserResource('success', 'Successfully Get Recruiter Profile!', $recruiter);
+            } else {
+                return new UserResource('success', 'Successfully Get User Profile!', $request->user());
+            }
+        } catch (\Throwable $th) {
+            return new UserResource('error', $th->getMessage(), null);
+        }
+    }
+    public function updateMyProfile(Request $request)
+    {
+        try {
+            $recruiter = Recruiter::where('user_id', $request->user()->id)->first();
+            if ($recruiter) {
+                $validatedData = $request->validate([
+                    'company_id' => 'required|exists:companies,id',
+                    'position' => 'required|max:55',
+                ]);
+                $recruiter->update($validatedData);
+                return new UserResource('success', 'Successfully Update Recruiter Profile!', $recruiter);
+            } else {
+                $validatedData = $request->validate([
+                    'company_id' => 'required|exists:companies,id',
+                    'position' => 'required|max:55',
+                ]);
+                $validatedData['user_id'] = $request->user()->id;
+                $recruiter = Recruiter::create($validatedData);
+                return new UserResource('success', 'Successfully Create Recruiter Profile!', $recruiter);
+            }
+        } catch (ValidationException $ve) {
+            $errors = $ve->errors();
+            $firstErrorMessages = array_values($errors)[0];
+            return new UserResource('error', $firstErrorMessages, null);
         } catch (\Throwable $th) {
             return new UserResource('error', $th->getMessage(), null);
         }

@@ -60,7 +60,7 @@ class UserController extends Controller
     public function recruiter()
     {
         try {
-            $users = User::whereHas('roles', function ($query) {
+            $users = User::whereHas('recruiter')->whereHas('roles', function ($query) {
                 $query->where('name', 'recruiter');
             })->with(['roles'])->get();
             return new UserResource('success', 'Data fetched successfully', $users);

@@ -17,11 +17,7 @@ class CompanyController extends Controller
         try {
             $user = Auth::user();
             $role = $user->roles->first()->name;
-            if ($role == 'super_admin' || $role == 'admin') {
-                $companies = Company::latest()->get();
-            } else {
-                $companies = Company::where('user_id', $user->id)->latest()->get();
-            }
+            $companies = Company::latest()->get();
             return new CompanyResource('success', 'Data fetched successfully', $companies);
         } catch (\Throwable $th) {
             return new CompanyResource('error', $th->getMessage(), null);
