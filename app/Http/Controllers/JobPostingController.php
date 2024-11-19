@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\JobPostingResource;
 use App\Models\JobPosting;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -40,6 +41,66 @@ class JobPostingController extends Controller
             } else {
                 $jobPostings = JobPosting::query()->with(['recruiter', 'skills', 'jobCategories'])->latest()->get();
             }
+            return new JobPostingResource("success", 'Job postings retrieved successfully', $jobPostings);
+        } catch (\Exception $e) {
+            return new JobPostingResource("error", 'An error occurred', $e->getMessage());
+        }
+    }
+    public function featuredJobs()
+    {
+        try {
+            $jobPostings = JobPosting::query()->with(['recruiter', 'skills', 'jobCategories', 'recruiter.company'])->latest()->limit(8)->get();
+            return new JobPostingResource("success", 'Featured job postings retrieved successfully', $jobPostings);
+        } catch (\Exception $e) {
+            return new JobPostingResource("error", 'An error occurred', $e->getMessage());
+        }
+    }
+    public function searchJobs(Request $request)
+    {
+        try {
+            $salaryRanges = [
+                "Less than 1 million" => [null, 1000000],
+                "1 million - 3 million" => [1000000, 3000000],
+                "3 million - 5 million" => [3000000, 5000000],
+                "5 million - 10 million" => [5000000, 10000000],
+                "More than 10 million" => [10000000, null],
+            ];
+            $datePostingRange = [
+                "Today" => [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()],
+                "Yesterday" => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
+                "Last 7 days" => [Carbon::now()->subDays(6)->startOfDay(), Carbon::now()->endOfDay()],
+                "Last 30 days" => [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()],
+                "All" => [null, null],
+            ];
+            $jobPostings = JobPosting::query();
+            if ($request->filters['salary']) {
+                $salaryRange = $salaryRanges[$request->filters['salary']];
+                $jobPostings->whereBetween('min_salary', $salaryRange)->orWhereBetween('max_salary', $salaryRange);
+            }
+            if ($request->filters['date_posting']) {
+                $dateRange = $datePostingRange[$request->filters['date_posting']];
+                $jobPostings->whereBetween('created_at', $dateRange);
+            }
+            if ($request->filters['level_experience']) {
+                $jobPostings->where('experience_level', $request->filters['level_experience']);
+            }
+            if ($request->filters['location']) {
+                $jobPostings->where('location', 'like', '%' . $request->filters['location'] . '%');
+            }
+            if ($request->filters['job_category']) {
+                $jobPostings->whereHas('jobCategories', function ($query) use ($request) {
+                    $query->where('slug_category', $request->filters['job_category']);
+                });
+            }
+            if ($request->filters['type_job']) {
+                $jobPostings->where('employment_type', $request->filters['type_job']);
+            }
+            if ($request->filters['work_type']) {
+                $jobPostings->where('work_type', $request->filters['work_type']);
+            }
+
+
+            $jobPostings = $jobPostings->with(['recruiter', 'skills', 'jobCategories', 'recruiter.company'])->latest()->paginate(10);
             return new JobPostingResource("success", 'Job postings retrieved successfully', $jobPostings);
         } catch (\Exception $e) {
             return new JobPostingResource("error", 'An error occurred', $e->getMessage());

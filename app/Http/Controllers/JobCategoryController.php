@@ -14,6 +14,11 @@ class JobCategoryController extends Controller
     {
         try {
             $jobCategories = JobCategory::latest()->get();
+            // count per job category
+            $jobCategories->map(function ($jobCategory) {
+                $jobCategory->job_post_count = $jobCategory->jobPostings->count();
+                return $jobCategory;
+            });
             return new JobCategoryResource('success', 'Job categories retrieved successfully', $jobCategories);
         } catch (\Throwable $th) {
             return new JobCategoryResource('error', $th->getMessage(), null);

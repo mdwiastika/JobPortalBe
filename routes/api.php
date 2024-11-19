@@ -31,4 +31,9 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('job-posts', JobPostingController::class)->middleware('role:super_admin|admin|recruiter');
         Route::get('recruiters', [UserController::class, 'recruiter'])->middleware('role:super_admin|admin|recruiter');
     });
+    Route::prefix('user')->group(function () {
+        Route::get('/categories', [JobCategoryController::class, 'index']);
+        Route::get('/featured-jobs', [JobPostingController::class, 'featuredJobs']);
+        Route::get('/search-jobs', [JobPostingController::class, 'searchJobs']);
+    });
 });

@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class JobPosting extends Model
 {
-    use Sluggable;
+    use Sluggable, HasFactory;
     protected $fillable = [
         'recruiter_id',
         'title',
@@ -32,7 +33,7 @@ class JobPosting extends Model
     }
     public function recruiter()
     {
-        return $this->belongsTo(Recruiter::class, 'user_id', 'recruiter_id');
+        return $this->belongsTo(Recruiter::class, 'recruiter_id', 'user_id');
     }
     public function skills()
     {
@@ -41,5 +42,9 @@ class JobPosting extends Model
     public function jobCategories()
     {
         return $this->belongsToMany(JobCategory::class, 'job_posting_categories', 'job_posting_id', 'job_category_id');
+    }
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id', 'id');
     }
 }
