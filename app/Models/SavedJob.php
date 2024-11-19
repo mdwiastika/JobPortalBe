@@ -13,7 +13,7 @@ class SavedJob extends Model
 
     public function jobSeeker()
     {
-        return $this->belongsTo(JobSeeker::class);
+        return $this->belongsTo(JobSeeker::class, 'job_seeker_id', 'user_id');
     }
 
     public function jobPosting()

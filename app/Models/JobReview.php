@@ -22,4 +22,8 @@ class JobReview extends Model
     {
         return $this->belongsTo(JobSeeker::class);
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'job_seeker_id', 'id');
+    }
 }

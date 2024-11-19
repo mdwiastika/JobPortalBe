@@ -106,6 +106,36 @@ class JobPostingController extends Controller
             return new JobPostingResource("error", 'An error occurred', $e->getMessage());
         }
     }
+    public function searchJobsDetail($slug)
+    {
+        try {
+            $jobPosting = JobPosting::query()->where('slug', $slug)->with(['recruiter', 'skills', 'jobCategories', 'recruiter.company', 'recruiter.user'])->first();
+            $jobPosting['date_post'] = $jobPosting->created_at->diffForHumans();
+            return new JobPostingResource("success", 'Job posting retrieved successfully', $jobPosting);
+        } catch (\Exception $e) {
+            return new JobPostingResource("error", 'An error occurred', $e->getMessage());
+        }
+    }
+    public function apply(Request $request, string $id)
+    {
+        try {
+            $jobPosting = JobPosting::findOrFail($id);
+            $jobApplication = $jobPosting->jobApplications()->where('job_seeker_id', $request->user()->id)->first();
+            if ($jobApplication) {
+                return new JobPostingResource("error", 'You have already applied for this job', null);
+            }
+            $jobPosting->jobApplications()->create([
+                'job_posting_id' => $jobPosting->id,
+                'job_seeker_id' => $request->user()->id,
+                'status' => 'applied',
+            ]);
+            return new JobPostingResource("success", 'Job application submitted successfully', null);
+        } catch (ModelNotFoundException $e) {
+            return new JobPostingResource("error", 'Job posting not found', $e->getMessage());
+        } catch (\Exception $e) {
+            return new JobPostingResource("error", 'An error occurred', $e->getMessage());
+        }
+    }
     public function store(Request $request)
     {
         try {
