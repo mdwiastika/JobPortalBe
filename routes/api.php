@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobCategoryController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\ReviewController;
@@ -49,6 +50,7 @@ Route::prefix('v1')->group(function () {
             Route::get("/save-jobs", [SavedJobsController::class, 'savedJobs']);
             Route::post("/save-jobs", [SavedJobsController::class, 'store']);
             Route::delete("/save-jobs/{id}", [SavedJobsController::class, 'destroy']);
+            Route::post('/job-applications', [JobApplicationController::class, 'store']);
         });
     });
 });
